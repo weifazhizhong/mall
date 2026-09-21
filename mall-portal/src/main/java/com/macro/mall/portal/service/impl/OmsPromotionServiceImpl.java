@@ -11,7 +11,6 @@ import com.macro.mall.portal.service.OmsPromotionService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -48,6 +47,8 @@ public class OmsPromotionServiceImpl implements OmsPromotionService {
                     //商品原价-促销价
                     PmsSkuStock skuStock = getOriginalPrice(promotionProduct, item.getProductSkuId());
                     BigDecimal originalPrice = skuStock.getPrice();
+                    //单品促销使用原价
+                    cartPromotionItem.setPrice(originalPrice);
                     cartPromotionItem.setReduceAmount(originalPrice.subtract(skuStock.getPromotionPrice()));
                     cartPromotionItem.setRealStock(skuStock.getStock()-skuStock.getLockStock());
                     cartPromotionItem.setIntegration(promotionProduct.getGiftPoint());
@@ -64,7 +65,7 @@ public class OmsPromotionServiceImpl implements OmsPromotionService {
                         BeanUtils.copyProperties(item,cartPromotionItem);
                         String message = getLadderPromotionMessage(ladder);
                         cartPromotionItem.setPromotionMessage(message);
-                        //商品原价-折扣金额*商品原价
+                        //商品原价-折扣*商品原价
                         PmsSkuStock skuStock = getOriginalPrice(promotionProduct,item.getProductSkuId());
                         BigDecimal originalPrice = skuStock.getPrice();
                         BigDecimal reduceAmount = originalPrice.subtract(ladder.getDiscount().multiply(originalPrice));
@@ -162,7 +163,9 @@ public class OmsPromotionServiceImpl implements OmsPromotionService {
             cartPromotionItem.setPromotionMessage("无优惠");
             cartPromotionItem.setReduceAmount(new BigDecimal(0));
             PmsSkuStock skuStock = getOriginalPrice(promotionProduct,item.getProductSkuId());
-            cartPromotionItem.setRealStock(skuStock.getStock()-skuStock.getLockStock());
+            if(skuStock!=null){
+                cartPromotionItem.setRealStock(skuStock.getStock()-skuStock.getLockStock());
+            }
             cartPromotionItem.setIntegration(promotionProduct.getGiftPoint());
             cartPromotionItem.setGrowth(promotionProduct.getGiftGrowth());
             cartPromotionItemList.add(cartPromotionItem);
